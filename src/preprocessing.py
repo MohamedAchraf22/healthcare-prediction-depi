@@ -1,5 +1,5 @@
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder
+# from sklearn.preprocessing import LabelEncoder
 
 df = pd.read_csv("datasets/raw/dataset.csv")
 df_clean = df.copy()
@@ -16,16 +16,6 @@ df_clean['bmi'] = df_clean.groupby(['age_group', 'gender'], observed=False)['bmi
 
 # For any remaining missing values, use overall median
 df_clean['bmi'] = df_clean['bmi'].fillna(df_clean['bmi'].median())
-
-# Convert binary columns to integers
-df_clean['hypertension'] = df_clean['hypertension'].astype(int)
-df_clean['heart_disease'] = df_clean['heart_disease'].astype(int)
-df_clean['stroke'] = df_clean['stroke'].astype(int)
-
-# Ensure numerical columns are float
-df_clean['age'] = df_clean['age'].astype(float)
-df_clean['avg_glucose_level'] = df_clean['avg_glucose_level'].astype(float)
-df_clean['bmi'] = df_clean['bmi'].astype(float)
 
 # Remove duplicates 
 df_clean = df_clean.drop_duplicates(subset=['id'], keep='first')
