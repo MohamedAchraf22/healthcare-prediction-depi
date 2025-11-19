@@ -1,5 +1,6 @@
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder ,LabelEncoder
+from sklearn.preprocessing import StandardScaler
 import re
 
 df = pd.read_csv("datasets/raw/dataset.csv")
@@ -38,18 +39,20 @@ df_clean['age_bmi_interaction'] = df_clean['age'] * df_clean['bmi']
 df_clean['cardiovascular_risk_score'] = df_clean['hypertension'] + df_clean['heart_disease']
 
 # Encoding
-ordinal_cols = ['age_group', 'bmi_class', 'glucose_risk']
-for col in ordinal_cols:
-    le = LabelEncoder()
-    df_clean[col] = le.fit_transform(df_clean[col].astype(str))
 
-nominal_cols = ['gender', 'ever_married', 'work_type', 'residence_type', 'smoking_status']
-ohe = OneHotEncoder(sparse_output=False, drop='first')
-encoded = ohe.fit_transform(df_clean[nominal_cols])
-oh_df = pd.DataFrame(encoded, columns=ohe.get_feature_names_out(nominal_cols))
+categorical_cols = [
+    'gender', 'ever_married', 'work_type', 'residence_type', 
+    'smoking_status', 'age_group', 'bmi_class', 'glucose_risk'
+]
+df_clean = pd.get_dummies(df_clean, columns=categorical_cols, drop_first=True)
 
-df_clean = pd.concat([df_clean.drop(nominal_cols, axis=1).reset_index(drop=True),
-                      oh_df.reset_index(drop=True)], axis=1)
+# Feature Scaling
 
+numerical_cols = ['age', 'avg_glucose_level', 'bmi', 'age_bmi_interaction']
+df_scaled = df_clean.copy()
+scaler = StandardScaler()
+df_scaled[numerical_cols] = scaler.fit_transform(df_scaled[numerical_cols])
+
+# Save Dataset
 output_name = "dataset.csv"
-df_clean.to_csv("datasets/processed/" + output_name)
+df_scaled.to_csv("datasets/processed/" + output_name , index=False)
