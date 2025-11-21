@@ -22,7 +22,8 @@ COLOR_PALETTE = {
     'dark': '#2c3e50'
 }
 GRADIENT_COLORS = ['#667eea', '#764ba2', '#f093fb', '#fa709a']
-df = pd.read_csv('visualizations/')
+
+df = pd.read_csv("datasets/raw/dataset.csv")
 
 missing_data = pd.DataFrame({
     'Column': df.columns,
@@ -40,7 +41,6 @@ numerical_bound = pd.DataFrame({
 df_clean = df.copy()
 
 bmi_missing_count = df_clean['bmi'].isnull().sum()
-print(f"Missing BMI values: {bmi_missing_count} ({bmi_missing_count/len(df_clean)*100:.2f}%)")
 df_clean['age_group'] = pd.cut(df_clean['age'],
                                 bins=[0, 18, 35, 50, 65, 100],
                                 labels=['<18', '18-35', '36-50', '51-65', '65+'])
@@ -107,8 +107,7 @@ fig.update_layout(
 )
 
 fig.show()
-print("\nStatistical Summary of Numerical Features:")
-print("=" * 100)
+
 
 categorical_features = ['gender', 'hypertension', 'heart_disease', 'ever_married',
                         'work_type', 'Residence_type', 'smoking_status']
@@ -196,12 +195,8 @@ fig.update_layout(
 )
 
 fig.show()
-print("\nCorrelations with Stroke (sorted by absolute value):")
 
 stroke_corr = corr_matrix['stroke'].drop('stroke').sort_values(key=lambda x: abs(x), ascending=False)
-for feature, corr in stroke_corr.items():
-    print(f"{feature:.<30} {corr:>8.4f}")
-
 
 numeric_cols = ['age','avg_glucose_level','bmi','hypertension','heart_disease','stroke']
 stroke_corr = df_clean[numeric_cols].corr()['stroke'].drop('stroke')
@@ -306,8 +301,6 @@ fig.update_yaxes(title_text="Stroke Rate (%)", secondary_y=True, showgrid=False)
 
 fig.show()
 
-print("\nStroke Rate by Age Group:")
-
 fig = make_subplots(
     rows=2, cols=2,
     subplot_titles=['<b>Stroke Rate by Gender</b>', '<b>Average Age by Gender</b>',
@@ -405,12 +398,6 @@ fig.update_yaxes(showgrid=True, gridcolor='lightgray')
 fig.update_xaxes(showgrid=False)
 
 fig.show()
-
-print("\nDetailed Smoking Status Analysis:")
-print("=" * 100)
-display(smoking_stroke)
-
-
 
 fig = make_subplots(
     rows=2, cols=2,
