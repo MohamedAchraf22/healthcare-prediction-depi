@@ -46,13 +46,7 @@ categorical_cols = [
 ]
 df_clean = pd.get_dummies(df_clean, columns=categorical_cols, drop_first=True)
 
-# Feature Scaling
-
-numerical_cols = ['age', 'avg_glucose_level', 'bmi', 'age_bmi_interaction']
-df_scaled = df_clean.copy()
-scaler = StandardScaler()
-df_scaled[numerical_cols] = scaler.fit_transform(df_scaled[numerical_cols])
 
 # Save Dataset
 output_name = "dataset.csv"
-df_scaled.to_csv("datasets/processed/" + output_name , index=False)
+df_clean.to_csv("datasets/processed/" + output_name , index=False)
