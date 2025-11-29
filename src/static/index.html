@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stroke Risk Predictor</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #121212;
+        color: #e0e0e0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        padding-top: 50px;
+    }
+
+    .container {
+        background: #1e1e1e;
+        padding: 30px 40px;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        width: 500px;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #ffffff;
+        font-size: 24px;
+    }
+
+    form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px 20px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #cccccc;
+        font-size: 14px;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid #444;
+        background: #2c2c2c;
+        color: #e0e0e0;
+        font-size: 14px;
+        outline: none;
+    }
+
+    input:focus, select:focus {
+        border-color: #007BFF;
+    }
+
+    button {
+        grid-column: 1 / -1;
+        padding: 12px;
+        background: #007BFF;
+        color: #fff;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.3s;
+        margin-top: 10px;
+    }
+
+    button:hover {
+        background: #0056b3;
+    }
+
+    .result {
+        margin-top: 25px;
+        padding: 15px;
+        border-radius: 12px;
+        font-weight: bold;
+        text-align: center;
+        font-size: 16px;
+    }
+
+    .low-risk {
+        background: #2e7d32;
+        color: #fff;
+    }
+
+    .high-risk {
+        background: #c62828;
+        color: #fff;
+    }
+
+</style>
+</head>
+<body>
+<div class="container">
+    <h2>Stroke Risk Predictor</h2>
+    <form id="predictForm">
+        <div>
+            <label>Gender</label>
+            <select name="gender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+        <div>
+            <label>Age</label>
+            <input type="number" name="age" required min="0">
+        </div>
+
+        <div>
+            <label>Hypertension</label>
+            <select name="hypertension">
+                <option value="0">No</option>
+                <option value="1">Yes</option>
+            </select>
+        </div>
+        <div>
+            <label>Heart Disease</label>
+            <select name="heart_disease">
+                <option value="0">No</option>
+                <option value="1">Yes</option>
+            </select>
+        </div>
+
+        <div>
+            <label>Ever Married</label>
+            <select name="ever_married">
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+        </div>
+        <div>
+            <label>Work Type</label>
+            <select name="work_type">
+                <option value="Private">Private</option>
+                <option value="Self-employed">Self-employed</option>
+                <option value="Govt_job">Govt_job</option>
+                <option value="Children">Children</option>
+                <option value="Never_worked">Never_worked</option>
+            </select>
+        </div>
+
+        <div>
+            <label>Residence Type</label>
+            <select name="Residence_type">
+                <option value="Urban">Urban</option>
+                <option value="Rural">Rural</option>
+            </select>
+        </div>
+        <div>
+            <label>Average Glucose Level</label>
+            <input type="number" name="avg_glucose_level" step="0.1" required>
+        </div>
+
+        <div>
+            <label>BMI</label>
+            <input type="number" name="bmi" step="0.1" required>
+        </div>
+        <div>
+            <label>Smoking Status</label>
+            <select name="smoking_status">
+                <option value="never smoked">Never Smoked</option>
+                <option value="formerly smoked">Formerly Smoked</option>
+                <option value="smokes">Smokes</option>
+            </select>
+        </div>
+
+        <button type="submit">Predict</button>
+    </form>
+
+    <div class="result" id="result" style="display:none;"></div>
+</div>
+
+<script>
+const form = document.getElementById("predictForm");
+const resultDiv = document.getElementById("result");
+
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const payload = Object.fromEntries(formData.entries());
+
+    payload.age = parseInt(payload.age);
+    payload.avg_glucose_level = parseFloat(payload.avg_glucose_level);
+    payload.bmi = parseFloat(payload.bmi);
+    payload.hypertension = parseInt(payload.hypertension);
+    payload.heart_disease = parseInt(payload.heart_disease);
+
+    try {
+        const response = await fetch("/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+
+        resultDiv.style.display = "block";
+        resultDiv.className = "result " + (data.final_prediction.includes("High") ? "high-risk" : "low-risk");
+        resultDiv.innerHTML = `
+            Stroke Probability: ${data.stroke_probability}<br>
+            Final Prediction: ${data.final_prediction}<br>
+            Model Decision: ${data.model_decision}
+        `;
+    } catch (err) {
+        resultDiv.style.display = "block";
+        resultDiv.className = "result high-risk";
+        resultDiv.innerHTML = "Error: " + err;
+    }
+});
+</script>
+</body>
+</html>
