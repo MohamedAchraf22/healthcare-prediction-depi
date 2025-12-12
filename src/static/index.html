@@ -21,7 +21,7 @@
         padding: 30px 40px;
         border-radius: 16px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        width: 500px;
+        width: 700px;
     }
 
     h2 {
@@ -34,7 +34,7 @@
     form {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 15px 20px;
+        gap: 2rem ;
     }
 
     label {
@@ -96,11 +96,17 @@
         color: #fff;
     }
 
+    .error-msg {
+    display: block;
+    margin-top: 4px;
+    }
+
 </style>
 </head>
 <body>
 <div class="container">
     <h2>Stroke Risk Predictor</h2>
+    <h3 style="color: #B0B0B0;">Enter your information to estimate the probability of stroke.</h3>
     <form id="predictForm">
         <div>
             <label>Gender</label>
@@ -111,7 +117,7 @@
         </div>
         <div>
             <label>Age</label>
-            <input type="number" name="age" required min="0">
+            <input type="number" name="age" required min="0" max="120" placeholder="Age 0-120">
         </div>
 
         <div>
@@ -155,13 +161,13 @@
             </select>
         </div>
         <div>
-            <label>Average Glucose Level</label>
-            <input type="number" name="avg_glucose_level" step="0.1" required>
+            <label>Average Glucose Level (mg/dL) </label>
+            <input type="number" placeholder="Average Glucose Level (30-500)" name="avg_glucose_level" step="0.1" required min="30" max="500">
         </div>
 
         <div>
             <label>BMI</label>
-            <input type="number" name="bmi" step="0.1" required>
+            <input type="number" placeholder="BMI (10-60)" name="bmi" step="0.1" required min="10" max="60">
         </div>
         <div>
             <label>Smoking Status</label>
@@ -182,6 +188,61 @@
 const form = document.getElementById("predictForm");
 const resultDiv = document.getElementById("result");
 
+// Create error message placeholders under inputs
+document.querySelectorAll("#predictForm div").forEach(div => {
+    const err = document.createElement("span");
+    err.className = "error-msg";
+    err.style.color = "#ff5252";
+    err.style.fontSize = "12px";
+    err.style.display = "none";
+    err.style.marginTop = "4px";
+    div.appendChild(err);
+});
+
+function setError(inputName, message) {
+    const input = form.querySelector(`[name="${inputName}"]`);
+    const err = input.parentElement.querySelector(".error-msg");
+    err.innerText = message;
+    err.style.display = "block";
+}
+
+function clearErrors() {
+    document.querySelectorAll(".error-msg").forEach(e => {
+        e.style.display = "none";
+    });
+}
+
+function validate(payload) {
+    clearErrors();
+    let valid = true;
+
+    // --- Validation Rules ---
+    if (payload.age < 0 || payload.age > 120 || isNaN(payload.age)) {
+        setError("age", "Age must be between 0 and 120.");
+        valid = false;
+    }
+
+    if (payload.avg_glucose_level < 30 || payload.avg_glucose_level > 500 || isNaN(payload.avg_glucose_level)) {
+        setError("avg_glucose_level", "Glucose must be between 40 and 400.");
+        valid = false;
+    }
+
+    if (payload.bmi < 10 || payload.bmi > 60 || isNaN(payload.bmi)) {
+        setError("bmi", "BMI must be between 10 and 60.");
+        valid = false;
+    }
+
+    // Protect empty text fields even though HTML has required
+    ["gender","ever_married","work_type","Residence_type","smoking_status"].forEach(name => {
+        if (!payload[name]) {
+            setError(name, "This field is required.");
+            valid = false;
+        }
+    });
+
+    return valid;
+}
+
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const formData = new FormData(form);
@@ -193,14 +254,20 @@ form.addEventListener("submit", async (e) => {
     payload.hypertension = parseInt(payload.hypertension);
     payload.heart_disease = parseInt(payload.heart_disease);
 
+    // Run validation
+    if (!validate(payload)) {
+        resultDiv.style.display = "none";
+        return;
+    }
+
     try {
         const response = await fetch("/predict", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
-        const data = await response.json();
 
+        const data = await response.json();
         resultDiv.style.display = "block";
         resultDiv.className = "result " + (data.final_prediction.includes("High") ? "high-risk" : "low-risk");
         resultDiv.innerHTML = `
@@ -215,5 +282,6 @@ form.addEventListener("submit", async (e) => {
     }
 });
 </script>
+
 </body>
 </html>
